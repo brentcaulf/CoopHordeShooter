@@ -2,6 +2,8 @@
 
 #include "SWeapon.h"
 #include "DrawDebugHelpers.h"
+#include "Kismet/GameplayStatics.h"
+#include "Particles/ParticleSystem.h"
 
 // Sets default values
 ASWeapon::ASWeapon()
@@ -11,6 +13,8 @@ ASWeapon::ASWeapon()
 
 	MeshComp = CreateDefaultSubobject< USkeletalMeshComponent>(TEXT("MeshComp"));
 	RootComponent = MeshComp;
+
+	MuzzleSocketName = "MuzzleSocket";
 }
 
 // Called when the game starts or when spawned
@@ -31,7 +35,8 @@ void ASWeapon::Fire()
 		FRotator EyeRotation;
 		MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
 
-		FVector TraceEnd = EyeLocation + (EyeRotation.Vector() * 10000);
+		FVector ShotDirection = EyeRotation.Vector();
+		FVector TraceEnd = EyeLocation + (ShotDirection * 10000);
 
 		FCollisionQueryParams QueryParams;
 		QueryParams.AddIgnoredActor(MyOwner);
@@ -43,9 +48,23 @@ void ASWeapon::Fire()
 		{
 			// if blocking hit, process damage
 
+			AActor* HitActor = Hit.GetActor();
+
+			UGameplayStatics::ApplyPointDamage(HitActor, 20.0f, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
+
+			if (ImpactEffect)
+			{
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
+			}
 		}
 
 		DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::White, false, 1.0f, 0, 1.0f);
+
+		if (MuzzleEffect)
+		{
+			UGameplayStatics::SpawnEmitterAttached(MuzzleEffect, MeshComp, MuzzleSocketName);
+		}
+		
 	}
 	
 }
