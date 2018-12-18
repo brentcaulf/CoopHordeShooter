@@ -1,6 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
-
-#include "SHealthComponent.h"
+#include "Components/SHealthComponent.h"
+#include "GameFramework/Actor.h"
 
 
 // Sets default values for this component's properties
@@ -38,5 +38,7 @@ void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, 
 
 	UE_LOG(LogTemp, Log, TEXT("Damage Taken: %s"), *FString::SanitizeFloat(Damage));
 	UE_LOG(LogTemp, Log, TEXT("Health Changed: %s"), *FString::SanitizeFloat(Health));
+
+	OnHealthChanged.Broadcast(this, Health, Damage, DamageType, InstigatedBy, DamageCauser);
 }
 
