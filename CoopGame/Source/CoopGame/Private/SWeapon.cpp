@@ -28,6 +28,9 @@ ASWeapon::ASWeapon()
 
 	BaseDamage = 20.0f;
 	RateOfFire = 600;
+
+	// Replicated for multiplayer
+	SetReplicates(true);
 }
 
 void ASWeapon::BeginPlay()
