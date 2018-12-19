@@ -10,30 +10,26 @@
 // Sets default values
 ASExplosiveBarrel::ASExplosiveBarrel()
 {
+	ExplosionDamage = 50.0f;
+	ExplosionRadius = 200.0f;
+	ExplosionImpulse = 400.0f;
 
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
+	MeshComp->SetSimulatePhysics(true);
+	// Set to physics body so exploding barrels can affect each other
+	MeshComp->SetCollisionObjectType(ECC_PhysicsBody);
 	RootComponent = MeshComp;
 
 	ForceComp = CreateDefaultSubobject< URadialForceComponent>(TEXT("ForceComp"));
-	ForceComp->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+	ForceComp->SetupAttachment(MeshComp);
+	ForceComp->Radius = ExplosionRadius;
+	ForceComp->bImpulseVelChange = true;
+	ForceComp->bAutoActivate = false; // So comp doesn't tick and only happens when FireImpulse is called
+	ForceComp->bIgnoreOwningActor = true; // ignore self
 
 	HealthComp = CreateDefaultSubobject<USHealthComponent>(TEXT("HealthComp"));
-
-	ExplosionDamage = 50.0f;
-	ExplosionRadius = 200.0f;
-}
-
-// Called when the game starts or when spawned
-void ASExplosiveBarrel::BeginPlay()
-{
-	Super::BeginPlay();
-	
 	HealthComp->OnHealthChanged.AddDynamic(this, &ASExplosiveBarrel::OnHealthChanged);
-
-	if (MeshComp && StartingMat)
-	{
-		MeshComp->SetMaterial(0, StartingMat);
-	}
+	
 }
 
 void ASExplosiveBarrel::OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
@@ -50,6 +46,10 @@ void ASExplosiveBarrel::Explode()
 	{
 		// Sets it as exploded
 		bExploded = true;
+
+		// Boost the barrel upwards
+		FVector BoostIntensity = FVector::UpVector * ExplosionImpulse;
+		MeshComp->AddImpulse(BoostIntensity, NAME_None, true);
 
 		// Play particle effect
 		if (ExplosionEffect)

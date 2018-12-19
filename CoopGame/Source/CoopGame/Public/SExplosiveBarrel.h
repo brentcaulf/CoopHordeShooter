@@ -21,10 +21,7 @@ public:
 	// Sets default values for this actor's properties
 	ASExplosiveBarrel();
 
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
+protected:	
 	UFUNCTION()
 	void OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
@@ -34,17 +31,14 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	USHealthComponent* HealthComp;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UStaticMeshComponent* MeshComp;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	URadialForceComponent* ForceComp;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Explosion")
-	UParticleSystem* ExplosionEffect;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Explosion")
-	UMaterialInterface* StartingMat;
+	UParticleSystem* ExplosionEffect;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Explosion")
 	UMaterialInterface* ExplodedMat;
@@ -52,8 +46,13 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Explosion")
 	float ExplosionDamage;
 
+	// Radius of the damage and radial force effects
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Explosion")
 	float ExplosionRadius;
+
+	// Impulse to apply to the barrel so that it explodes upwards
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Explosion")
+	float ExplosionImpulse;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Explosion")
 	TSubclassOf<UDamageType> DamageType;
