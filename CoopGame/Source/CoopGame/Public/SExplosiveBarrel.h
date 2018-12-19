@@ -28,6 +28,9 @@ protected:
 	UFUNCTION()
 	void Explode();
 
+	UFUNCTION()
+	void OnRep_Exploded();
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	USHealthComponent* HealthComp;
 
@@ -40,7 +43,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Explosion")
 	UParticleSystem* ExplosionEffect;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Explosion")
+	UPROPERTY(Replicated, EditDefaultsOnly, BlueprintReadOnly, Category = "Explosion")
 	UMaterialInterface* ExplodedMat;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Explosion")
@@ -57,6 +60,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Explosion")
 	TSubclassOf<UDamageType> DamageType;
 
+	UPROPERTY(ReplicatedUsing=OnRep_Exploded)
 	bool bExploded;
 
 public:	
