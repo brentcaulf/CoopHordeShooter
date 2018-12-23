@@ -56,4 +56,8 @@ protected:
 	// Checks to see if any bots are alive
 	void CheckWaveState();
 
+	void CheckAnyPlayerAlive();
+
+	void GameOver();
+
 };

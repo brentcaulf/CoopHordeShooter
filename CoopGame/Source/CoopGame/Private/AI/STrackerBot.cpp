@@ -249,7 +249,7 @@ void ASTrackerBot::OnCheckNearbyBots()
 			NrOfBots++;
 		}
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Number of bots found: %s"), *FString::FromInt(NrOfBots));
+	//UE_LOG(LogTemp, Warning, TEXT("Number of bots found: %s"), *FString::FromInt(NrOfBots));
 
 	const int32 MaxPowerLevel = 4;
 
