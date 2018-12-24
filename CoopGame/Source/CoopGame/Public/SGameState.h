@@ -16,6 +16,8 @@ enum class EWaveState : uint8
 	// No longer spawning new bots, waiting for players to kill remaining bots
 	WaitingToComplete,
 
+	WaveComplete,
+
 	GameOver,
 };
 
@@ -28,10 +30,8 @@ class COOPGAME_API ASGameState : public AGameStateBase
 	GENERATED_BODY()
 	
 public:
-
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_WaveState, Category = "GameState")
-	EWaveState WaveState;
-
+	void SetWaveState(EWaveState NewState);
+	
 protected:
 
 	UFUNCTION()
@@ -40,5 +40,7 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, Category = "GameState")
 	void WaveStateChanged(EWaveState NewState, EWaveState OldState);
 	
-	
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_WaveState, Category = "GameState")
+	EWaveState WaveState;
+
 };

@@ -5,6 +5,18 @@
 
 
 
+void ASGameState::SetWaveState(EWaveState NewState)
+{
+	if (Role == ROLE_Authority)
+	{
+		EWaveState OldState = WaveState;
+		
+		WaveState = NewState;
+		// Call on server
+		OnRep_WaveState(OldState);
+	}
+}
+
 void ASGameState::OnRep_WaveState(EWaveState OldState)
 {
 	WaveStateChanged(WaveState, OldState);
