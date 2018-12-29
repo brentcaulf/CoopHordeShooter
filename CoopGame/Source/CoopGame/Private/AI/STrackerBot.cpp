@@ -11,6 +11,7 @@
 #include "Components/SphereComponent.h"
 #include "SCharacter.h"
 #include "Sound/SoundCue.h"
+#include "TimerManager.h"
 
 static int32 DebugTrackerBotDrawing = 0;
 FAutoConsoleVariableRef CVARDebugTrackerBotDrawing(
@@ -45,7 +46,7 @@ ASTrackerBot::ASTrackerBot()
 	RequiredDistanceToTarget = 100;
 
 	ExplosionDamage = 50.0f;
-	ExplosionRadius = 200.0f;
+	ExplosionRadius = 350.0f;
 	SelfDamageInterval = 0.25f;
 	SelfDamage = 20.0f;
 }
@@ -68,15 +69,42 @@ void ASTrackerBot::BeginPlay()
 
 FVector ASTrackerBot::GetNextPathPoint()
 {	
-	// Hack, to get player location
-	auto PlayerPawn = UGameplayStatics::GetPlayerPawn(this, 0);
-
-	UNavigationPath* NavPath = UNavigationSystemV1::FindPathToActorSynchronously(this, GetActorLocation(), PlayerPawn);
+	AActor* BestTarget = nullptr;
+	float NearestTargetDistance = FLT_MAX;
 	
-	if (NavPath && NavPath->PathPoints.Num() > 1)
+	for (FConstPawnIterator It = GetWorld()->GetPawnIterator(); It; It++)
 	{
-		// return next point in the path
-		return NavPath->PathPoints[1];
+		APawn* TestPawn = It->Get();
+		if (TestPawn == nullptr || USHealthComponent::IsFriendly(TestPawn, this))
+		{
+			continue;
+		}
+
+		USHealthComponent* TestHealthComp = Cast<USHealthComponent>(TestPawn->GetComponentByClass(USHealthComponent::StaticClass()));
+		if (TestHealthComp && TestHealthComp->GetHealth() > 0.0f)
+		{
+			float Distance = (TestPawn->GetActorLocation() - GetActorLocation()).Size();
+
+			if (Distance < NearestTargetDistance)
+			{
+				BestTarget = TestPawn;
+				NearestTargetDistance = Distance;
+			}
+		}
+	}
+
+	if (BestTarget)
+	{
+		UNavigationPath* NavPath = UNavigationSystemV1::FindPathToActorSynchronously(this, GetActorLocation(), BestTarget);
+
+		GetWorldTimerManager().ClearTimer(TimerHandle_RefreshPath);
+		GetWorldTimerManager().SetTimer(TimerHandle_RefreshPath, this, &ASTrackerBot::RefreshPath, 5.0f, false);
+
+		if (NavPath && NavPath->PathPoints.Num() > 1)
+		{
+			// return next point in the path
+			return NavPath->PathPoints[1];
+		}
 	}
 
 	// Failed to find path
@@ -195,7 +223,7 @@ void ASTrackerBot::NotifyActorBeginOverlap(AActor* OtherActor)
 	if (!bStartedSelfDestruction && !bExploded)
 	{
 		ASCharacter* PlayerPawn = Cast<ASCharacter>(OtherActor);
-		if (PlayerPawn)
+		if (PlayerPawn && !USHealthComponent::IsFriendly(OtherActor, this))
 		{
 			// Overlapped with player
 			if (Role == ROLE_Authority)
@@ -214,7 +242,6 @@ void ASTrackerBot::NotifyActorBeginOverlap(AActor* OtherActor)
 void ASTrackerBot::OnCheckNearbyBots()
 {
 	
-	
 	// distance to check for nearby bots
 	const float Radius = 600;
 
@@ -227,7 +254,6 @@ void ASTrackerBot::OnCheckNearbyBots()
 	// Our tracker bot's mesh component is set to Physics Body in Blueprint (default profile of physics simulated actors)
 	QueryParams.AddObjectTypesToQuery(ECC_PhysicsBody);
 	QueryParams.AddObjectTypesToQuery(ECC_Pawn);
-	//QueryParams.AddObjectTypesToQuery(ECC_WorldDynamic);
 
 	TArray<FOverlapResult> Overlaps;
 	GetWorld()->OverlapMultiByObjectType(Overlaps, GetActorLocation(), FQuat::Identity, QueryParams, CollShape);
@@ -278,4 +304,9 @@ void ASTrackerBot::OnCheckNearbyBots()
 		// Draw on the bot location
 		DrawDebugString(GetWorld(), FVector(0, 0, 0), FString::FromInt(PowerLevel), this, FColor::White, 1.0f, true);
 	}
+}
+
+void ASTrackerBot::RefreshPath()
+{
+	NextPathPoint = GetNextPathPoint();
 }
